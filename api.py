@@ -13,6 +13,11 @@ def heroes(id):
   hero = get_hero(id)
   return jsonify(hero)
 
+@app.route('/auctions/<int:id>', methods=['GET'])
+def auctions(id):
+  auction = get_auction(id)
+  return jsonify(auction)
+
 def get_hero(hero_id):
   w3 = Web3(Web3.HTTPProvider(config.harmony_url))
   abi = json.loads(config.contract_abi)
@@ -43,5 +48,27 @@ def get_hero(hero_id):
   tuple_index = tuple_index + 1
 
   return hero
+
+
+def get_auction(token_id):
+  w3 = Web3(Web3.HTTPProvider(config.harmony_url))
+  abi = json.loads(config.auction_abi)
+
+  contract_address = Web3.toChecksumAddress(config.auction_contract_address)
+  contract = w3.eth.contract(contract_address, abi=abi)
+  auction = contract.functions.getAuction(token_id).call()
+  return human_readable_auction(auction, token_id)
+
+def human_readable_auction(auction, hero_id):
+    human_readable = {}
+    human_readable['auction_id'] = auction[0]
+    human_readable['starting_price'] = auction[2]
+    human_readable['ending_price'] = auction[3]
+    human_readable['duration'] = auction[4]
+    human_readable['started_at'] = auction[5]
+    human_readable['hero_id'] = hero_id
+    human_readable['token_id'] = hero_id
+
+    return human_readable
 
 app.run()
