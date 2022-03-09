@@ -1,5 +1,7 @@
 FROM python:latest
 
+RUN pip install web3 flask
+
 WORKDIR /app
 COPY . .
 
