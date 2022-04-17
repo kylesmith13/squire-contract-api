@@ -1,5 +1,5 @@
 import flask
-from flask import jsonify
+from flask import jsonify, request
 import config
 import json
 import utils
@@ -16,8 +16,9 @@ def heroes(id):
     return jsonify(hero)
 
 
-@app.route('/getAuctionFilter', methods=['GET'])
+@app.route('/getAuctionFilter', methods=['POST'])
 def auction_filter():
+    fromBlock = request.json['fromBlock']
     # websock_address = "wss://ws.s0.t.hmny.io/"
     w3 = Web3(Web3.HTTPProvider(config.harmony_url))
     # w3 = Web3(Web3.WebsocketProvider(websock_address))
@@ -27,7 +28,7 @@ def auction_filter():
     purchased_abi = json.loads(config.auction_successful_event_abi)
 
     contract_address = Web3.toChecksumAddress(config.auction_contract_address)
-    
+
     # keccak hashed function head for an event
     auction_created = "0x9a33d4a1b0a13cd8ff614a080df31b4b20c845e5cde181e3ae6f818f62b6ddde"
     auction_canceled = "0xdb9cc99dc874f9afbae71151f737e51547d3d412b52922793437d86607050c3c"
