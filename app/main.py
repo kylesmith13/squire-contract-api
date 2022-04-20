@@ -7,6 +7,11 @@ from web3 import Web3
 from web3._utils.events import get_event_data
 from hexbytes import HexBytes
 
+# websockets
+import asyncio
+import requests
+from websockets import connect
+
 app = flask.Flask(__name__)
 
 
@@ -16,12 +21,10 @@ def heroes(id):
     return jsonify(hero)
 
 
-@app.route('/getAuctionFilter', methods=['POST'])
+@app.route('/getAuctions', methods=['POST'])
 def auction_filter():
     fromBlock = request.json['fromBlock']
-    # websock_address = "wss://ws.s0.t.hmny.io/"
     w3 = Web3(Web3.HTTPProvider(config.harmony_url))
-    # w3 = Web3(Web3.WebsocketProvider(websock_address))
     abi = json.loads(config.auction_abi)
     created_abi = json.loads(config.auction_created_event_abi)
     canceled_abi = json.loads(config.auction_canceled_event_abi)
@@ -34,7 +37,6 @@ def auction_filter():
     auction_canceled = "0xdb9cc99dc874f9afbae71151f737e51547d3d412b52922793437d86607050c3c"
     auction_purchased = "0xe40da2ed231723b222a7ba7da994c3afc3f83a51da76262083e38841e2da0982"
     latest = w3.eth.get_block_number()
-    fromBlock = latest - 10
     logs = w3.eth.get_logs(
         {"abi": abi, "address": contract_address, "topics": [auction_created], "fromBlock": fromBlock, "toBlock": latest})
 
@@ -51,14 +53,63 @@ def auction_filter():
         # https://github.com/ethereum/web3.py/blob/fbaf1ad11b0c7fac09ba34baff2c256cffe0a148/web3/_utils/events.py#L200
         HexBytes(auction_created) == log['topics'][0]
         if log['topics'][0] == HexBytes(auction_created):
-            handle_event(created_abi, w3, log, all_events)
+            handle_events(created_abi, w3, log, all_events)
             # all_events.append(get_event_data(w3.codec, created_abi, log))
         elif log['topics'][0] == HexBytes(auction_canceled):
-            handle_event(canceled_abi, w3, log, all_events)
+            handle_events(canceled_abi, w3, log, all_events)
         elif log['topics'][0] == HexBytes(auction_purchased):
-            handle_event(purchased_abi, w3, log, all_events)
+            handle_events(purchased_abi, w3, log, all_events)
 
     return jsonify({"latest": latest, "events": all_events})
+
+
+async def blahBlah():
+    websock_address = "wss://ws.s0.t.hmny.io/"
+    contract_address = Web3.toChecksumAddress(config.auction_contract_address)
+    async with connect(websock_address) as ws:
+        await ws.send(json.dumps({"id": 1, "method": "eth_subscribe", "params": ["logs", {
+            "address": contract_address,
+            "topics": []}]
+        }))
+        subscription_response = await ws.recv()
+        print("--------------- response ---------------")
+        print(subscription_response)
+        # you are now subscribed to the event
+        # you keep trying to listen to new events (similar idea to longPolling)
+        while True:
+            w3 = Web3(Web3.HTTPProvider(config.harmony_url))
+            created_abi = json.loads(config.auction_created_event_abi)
+            canceled_abi = json.loads(config.auction_canceled_event_abi)
+            purchased_abi = json.loads(config.auction_successful_event_abi)
+
+            auction_created = "0x9a33d4a1b0a13cd8ff614a080df31b4b20c845e5cde181e3ae6f818f62b6ddde"
+            auction_canceled = "0xdb9cc99dc874f9afbae71151f737e51547d3d412b52922793437d86607050c3c"
+            auction_purchased = "0xe40da2ed231723b222a7ba7da994c3afc3f83a51da76262083e38841e2da0982"
+            try:
+                message = await asyncio.wait_for(ws.recv(), timeout=60)
+                print(message)
+                parsed_message = json.loads(message)
+                print("-------------- message ---------------")
+                log = parsed_message['params']['result']
+                for idx, item in enumerate(log["topics"]):
+                    log["topics"][idx] = bytes(HexBytes(item))
+
+                if log['topics'][0] == HexBytes(auction_created):
+                    print("found created event")
+                    event = handle_event(created_abi, w3, log)
+                    print(event)
+                if log['topics'][0] == HexBytes(auction_canceled):
+                    print("found canceled event")
+                    event = handle_event(canceled_abi, w3, log)
+                    print(event)
+                if log['topics'][0] == HexBytes(auction_purchased):
+                    print("found purchased event")
+                    event = handle_event(purchased_abi, w3, log)
+                    print(event)
+
+                pass
+            except:
+                pass
 
 
 @ app.route('/getFilterChanges/<address>', methods=['GET'])
@@ -112,7 +163,7 @@ def human_readable_auction(auction, hero_id):
     return human_readable
 
 
-def handle_event(abi, w3, log, events):
+def handle_events(abi, w3, log, events):
     event_data = get_event_data(w3.codec, abi, log)
     event_details = {}
     event_details['type'] = event_data['event']
@@ -124,3 +175,17 @@ def handle_event(abi, w3, log, events):
             event_details[key] = value
 
     events.append(event_details)
+
+
+def handle_event(abi, w3, log):
+    event_data = get_event_data(w3.codec, abi, log)
+    event_details = {}
+    event_details['type'] = event_data['event']
+    for key, value in event_data['args'].items():
+        if key in ["startingPrice", "endingPrice", "totalPrice"]:
+            # convert our number so its easier to handle
+            event_details[key] = w3.fromWei(value, 'ether')
+        else:
+            event_details[key] = value
+
+    return event_details
