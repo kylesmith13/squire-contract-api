@@ -1,3 +1,6 @@
 flask
 gunicorn
 web3
+websockets
+asyncio
+hexbytes
