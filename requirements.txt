@@ -1,9 +1,8 @@
+asyncio
+eth-utils
 flask
 gunicorn
-web3
-websockets
-asyncio
 hexbytes
 requests
-time
-logging
+web3
+websockets
