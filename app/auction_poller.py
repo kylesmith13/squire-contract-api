@@ -2,6 +2,7 @@ import asyncio
 import json
 import config
 import time
+import requests
 
 from app.logger import log_error
 from websockets import connect
@@ -42,7 +43,6 @@ async def poll_auction_data():
                     # this timing out after 60 seconds might have been what was breaking the entire system. its quite possible
                     # that no messages came in for 60 seconds
                     message = await asyncio.wait_for(ws.recv(), timeout=240)
-                    print(message)
                     parsed_message = json.loads(message)
                     print(time.strftime("%b %d %Y %H:%M:%S"))
                     log = parsed_message['params']['result']
@@ -52,14 +52,17 @@ async def poll_auction_data():
                     if log['topics'][0] == HexBytes(auction_created):
                         print("found created event")
                         event = handle_event(created_abi, w3, log)
+                        send_event(event, "auctionCreated")
                         print(event)
                     if log['topics'][0] == HexBytes(auction_canceled):
                         print("found canceled event")
                         event = handle_event(canceled_abi, w3, log)
+                        send_event(event, "auctionCanceled")
                         print(event)
                     if log['topics'][0] == HexBytes(auction_purchased):
                         print("found purchased event")
                         event = handle_event(purchased_abi, w3, log)
+                        send_event(event, "auctionPurchased")
                         print(event)
 
                     pass
@@ -67,7 +70,7 @@ async def poll_auction_data():
                     log_error(e)
                     break
     except:
-        await asyncio.sleep(10)
+        await asyncio.sleep(2)
         await poll_auction_data()
 
 
@@ -78,8 +81,16 @@ def handle_event(abi, w3, log):
     for key, value in event_data['args'].items():
         if key in ["startingPrice", "endingPrice", "totalPrice"]:
             # convert our number so its easier to handle
-            event_details[key] = w3.fromWei(value, 'ether')
+            event_details[key] = value / 1000000000000000000
         else:
             event_details[key] = value
 
     return event_details
+
+
+def send_event(event, route):
+    try:
+        res = requests.post('http://localhost:4000/' + route, json=event)
+        # dictFromServer = res.json()
+    except Exception as e:
+        print(e)
