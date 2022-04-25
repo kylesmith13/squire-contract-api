@@ -1,5 +1,7 @@
 import os
 
+elixir_url = "https://squire-api-db.fly.dev/" if os.environ['ENV'] == 'prod' else "http://localhost:4000/"
+
 version = 0.1
 footer = "made with \u2764\uFE0F  by katalyst.eth"
 harmony_url = 'https://api.s0.t.hmny.io'

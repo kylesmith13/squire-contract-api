@@ -1,7 +1,6 @@
 from app.main import app
 from app.auction_poller import background_task
 from app.logger import initialize_logger
-import asyncio
 import threading
 
 if __name__ == "__main__":

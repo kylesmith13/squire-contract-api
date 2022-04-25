@@ -90,7 +90,7 @@ def handle_event(abi, w3, log):
 
 def send_event(event, route):
     try:
-        res = requests.post('http://localhost:4000/' + route, json=event)
+        res = requests.post(config.elixir_url + route, json=event)
         # dictFromServer = res.json()
     except Exception as e:
         print(e)
