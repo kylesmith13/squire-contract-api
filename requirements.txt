@@ -1,8 +1,6 @@
-asyncio
-eth-utils
 flask
 gunicorn
-hexbytes
-requests
 web3
 websockets
+asyncio
+hexbytes
