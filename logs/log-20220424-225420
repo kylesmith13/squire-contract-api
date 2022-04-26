@@ -3184,3 +3184,7 @@ INFO:werkzeug:127.0.0.1 - - [25/Apr/2022 21:53:44] "GET /heroes/171432 HTTP/1.1"
 INFO:werkzeug:127.0.0.1 - - [25/Apr/2022 21:53:53] "GET /heroes/172666 HTTP/1.1" 200 -
 INFO:werkzeug:127.0.0.1 - - [25/Apr/2022 21:54:04] "GET /heroes/180359 HTTP/1.1" 200 -
 INFO:werkzeug:127.0.0.1 - - [25/Apr/2022 21:54:41] "GET /heroes/172255 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [25/Apr/2022 21:55:18] "GET /heroes/174465 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [25/Apr/2022 21:55:32] "GET /heroes/180361 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [25/Apr/2022 21:56:48] "GET /heroes/175517 HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [25/Apr/2022 21:57:14] "GET /heroes/175698 HTTP/1.1" 200 -
