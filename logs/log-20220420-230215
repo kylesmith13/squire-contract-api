@@ -1,0 +1,2 @@
+ERROR:root: [Apr 20 2022 23:02:15]: starting
+INFO:werkzeug: * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
