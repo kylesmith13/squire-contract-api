@@ -8,3 +8,4 @@ if __name__ == "__main__":
     th = threading.Thread(target=background_task)
     th.start()
     app.run()
+    th.join()
